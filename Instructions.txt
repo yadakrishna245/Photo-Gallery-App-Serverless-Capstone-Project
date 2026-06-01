@@ -1,0 +1,130 @@
+DynamoDB : 
+
+Table Name: PhotoGallery
+PartitionKey: photoId
+
+=====
+
+S3 Bucket Configuration :
+
+Create 2 buckets, Enable CORS and make it public
+
+Data Store Bucket : photo-sharing-krishna-data					--> keep it private
+Website hosting Bucket : photo-sharing-krishna-hosting			--> Enable static website hosting
+
+---
+
+Create an IAM Role for Lambda with below permissions:
+
+1. lambdaBasicaccessexecution
+2. DynamoDB
+3. S3Full
+
+---
+
+
+Create 2 lambda function, Refer lambda folder for code.
+
+1. List the Photos
+2. Upload the photos
+
+Adjust the lamabda timeout values, and update the "Environment varibales" for Uplaod lambda function
+
+---
+
+Create API gateway, Enable "GET" and "POST" operation:
+
+Create "REST API" --> Name : "PhotoGalleryAPI" --> REGIONAL --> TLS 1.0
+Create "Resopurces" --> name: "photos" --> enable "CORS"
+
+Create Method --> "GET" --> listPhotos lambda function
+Create Method --> "POST" --> uploadPhotos lambda function
+
+Enable "CORS" at APIGateway Resources: 
+
+Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token
+
+
+Create a Stage and keep the apigw invoke URL: 
+
+https://1mkei0iglk.execute-api.ap-south-1.amazonaws.com/prod
+
+---
+
+Now create "COGNITO" userpools, Name : PhotoGalleryUsers
+Edit "App Client" 
+
+Choose and Edit "App Clients", and choose below 
+
+3. Sign in with secure remote password (SRP): ALLOW_USER_SRP_AUTH
+5. Sign in with custom authentication flows from Lambda triggers: ALLOW_CUSTOM_AUTH
+6. Get new user tokens from existing authenticated sessions: ALLOW_REFRESH_TOKEN_AUTH
+
+Refresh token expiration : 60 Minutes
+
+Under "Advanced security configurations" --> DISABLE "Prevent user existence errors"
+
+---
+
+Now, Need to configure the "callback URLs" and "Sign-out URLs"
+
+Allowed callback URLs: 
+http://localhost:5500/index.html
+http://localhost:8080/index.html
+https://photo-sharing-krishna-hosting.s3.ap-south-1.amazonaws.com/
+https://photo-sharing-krishna-hosting.s3.ap-south-1.amazonaws.com/index.html
+
+Identity providers: Cognito user pool
+OAuth 2.0 grant types : Implicit grant
+OpenID Connect scopes : Email, OpenID
+
+---
+
+Edit cognito Domain and recreate: after region, There is a malfunction in default domain name.. 
+
+ap-south-1neh7erjbk
+
+
+---
+
+Edit branding in login page.. 
+
+---
+
+Navigate back to "API Gateway" and add Authorizer
+
+Authorizer type: cognito
+
+Token source: Authorization
+
+--> Add this Authorizer to "get" and "post" APIs
+
+--> REDEPLOY again
+
+---
+
+Now, Grab below information: 
+
+Cognito Domain Name: ap-south-1neh7erjbk.auth.ap-south-1.amazoncognito.com
+ClientID : 16ssp3i86ina574fkopkia306h
+
+APi Gw: https://1mkei0iglk.execute-api.ap-south-1.amazonaws.com/prod
+Data Bucket: photo-sharing-krishna-data
+Region : ap-south-1
+
+---
+
+Now, use the S3 Object URL to uplaod the data and test the flow
+
+
+
+
+https://k19ebbhmx5.execute-api.ap-south-1.amazonaws.com/prd
+
+https://krishnatest.auth.ap-south-1.amazoncognito.com
+
+Client ID: 6rqmhj4k660vc5ku46v6be60mp
+
+User pool ID: ap-south-1_gMYhQzlbo
+
+
